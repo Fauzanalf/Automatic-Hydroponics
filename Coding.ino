@@ -56,9 +56,10 @@ void loop() {
   ppmUtama();
   volumeUtama();
 
-  if(distanceUtama>=20){            //buat algoritma sampe bak penampungnya penuh
+  while(distanceUtama>=20){ //isi sampe penuh
     digitalWrite(relaySelang, LOW);
-    delay(10000);
+    delay(2000);
+    digitalWrite(relaySelang, HIGH);
   }
 
   if(tdsValue<=400){
