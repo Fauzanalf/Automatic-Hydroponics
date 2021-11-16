@@ -14,7 +14,8 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 #define TdsSensorPin A1
 GravityTDS gravityTds;
  
-float tdsValue = 0;
+int tdsValue = 0;
+String kirim="";
 
 // defines variables
 long durationUtama, durationA, durationB; // variable for the duration of sound wave travel
@@ -23,7 +24,8 @@ int distanceUtama, distanceA, distanceB; // variable for the distance measuremen
 const int relayUtama=8, relayA=9, relayB=10, relaySelang=11;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
+  Serial3.begin(115200);
   pinMode(trigPinUtama, OUTPUT); // Sets the trigPin as an OUTPUT
   pinMode(echoPinUtama, INPUT); // Sets the echoPin as an INPUT
   pinMode(trigPinA, OUTPUT); // Sets the trigPin as an OUTPUT
@@ -53,6 +55,7 @@ void setup() {
   
 }
 void loop() {
+
   ppmUtama();
   volumeUtama();
 
@@ -81,8 +84,12 @@ void loop() {
 void ppmUtama(){
   gravityTds.update();  //sample and calculate
   tdsValue = gravityTds.getTdsValue();  // then get the value
-  Serial.print(tdsValue,0);
-  Serial.println("ppm");
+  Serial.print(tdsValue);
+  Serial.println(" ppm");
+  kirim = "";
+  kirim+=tdsValue;
+  Serial3.println(kirim);
+  delay(500);
 }
 
 void volumeUtama(){
