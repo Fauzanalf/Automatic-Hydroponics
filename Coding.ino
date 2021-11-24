@@ -72,37 +72,46 @@ void loop() {
     volumeA();
     volumeB();
     phSensor();
+    hasil();
     if(percentageUtama<=30){
       digitalWrite(relayUtama,HIGH);
       while(percentageUtama<=80){ //isi sampe penuh
         digitalWrite(relaySelang, LOW);
         delay(5000);
         digitalWrite(relaySelang, HIGH);
+        delay(3000);
         volumeUtama();
         hasil();
       }
       angkasiklus++;
     }
     digitalWrite(relayUtama, LOW);
+    delay(1000);
     if(percentageA<=20 || percentageB<=20){
       digitalWrite(relayUtama, HIGH);
+      delay(1000);
       volumeA();
       volumeB();
       hasil();
     }
 
-    hasil();
-
     if(tdsValue<siklus[angkasiklus]){
+      digitalWrite(relayUtama, HIGH);
       while(tdsValue<siklus[angkasiklus]){
+        hasil();
         digitalWrite(relayA,LOW);
-        digitalWrite(relayB,LOW);
         delay(2000);
         digitalWrite(relayA,HIGH);
+        delay(1000);
+        digitalWrite(relayB,LOW);
+        delay(2000);
         digitalWrite(relayB,HIGH);
+        delay(1000);
         ppmUtama();
-        hasil();
+        delay(500);
       }
+      digitalWrite(relayUtama, LOW);
+      delay(2000);
     }
   }else{
     lcd.clear();
