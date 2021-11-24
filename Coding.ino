@@ -9,15 +9,18 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 #define trigPinA 4 // trigger ultrasonik pupuk A
 #define echoPinB 7 // echo ultrasonik bak pupuk B
 #define trigPinB 6 // trigger ultrasonik bak pupuk B
-
-#define phSensorPin A0
 #define TdsSensorPin A1
 GravityTDS gravityTds;
 
-float calibration_value = 31.49;
-int phval = 0; 
-unsigned long int avgval; 
-int buffer_arr[10],temp;
+const int ph_Pin  = A0;
+float Po = 0;
+float PH_step;
+int nilai_analog_PH;
+double TeganganPh;
+//untuk kalibrasi
+float PHasam = 3.1;
+float PHnetral = 2.7;
+
 int tdsValue = 0;
 String kirim="";
 int siklus[]={400,600,800,1000};
@@ -27,7 +30,7 @@ int angkasiklus=-1;
 long durationUtama, durationA, durationB; // variable for the duration of sound wave travel
 int distanceUtama, distanceA, distanceB, percentageA, percentageB,percentageUtama; // variable for the distance measurement
 
-const int relayUtama=8, relayA=9, relayB=10, relaySelang=11;
+const int relayUtama=8, relayA=10, relayB=11, relaySelang=9;
 
 void setup() {
   Serial.begin(9600);
@@ -43,6 +46,7 @@ void setup() {
   pinMode(relayA, OUTPUT);
   pinMode(relayB, OUTPUT);
   pinMode(relaySelang, OUTPUT);
+  pinMode (ph_Pin, INPUT);
   digitalWrite(relayUtama, HIGH);
   digitalWrite(relayA, HIGH);
   digitalWrite(relayB, HIGH);
@@ -67,8 +71,9 @@ void loop() {
     volumeUtama();
     volumeA();
     volumeB();
-//    phSensor();
-    if(percentageUtama<=10){
+    phSensor();
+    if(percentageUtama<=30){
+      digitalWrite(relayUtama,HIGH);
       while(percentageUtama<=80){ //isi sampe penuh
         digitalWrite(relaySelang, LOW);
         delay(5000);
@@ -113,9 +118,9 @@ void ppmUtama(){
   Serial.print(tdsValue);
   Serial.println(" ppm");
 
-  kirim = "";
-  kirim+=tdsValue;
-  Serial3.println(kirim);
+//  kirim = "";
+//  kirim+=tdsValue;
+//  Serial3.println(kirim);
   delay(500);
 }
 
@@ -186,42 +191,29 @@ void volumeB(){
   Serial.println(" %");
 }
 
-//void phSensor(){
-//  for(int i=0;i<10;i++) 
-// { 
-//  buffer_arr[i]=analogRead(phSensorPin);
-//  delay(30);
-// }
-//  for(int i=0;i<9;i++)
-//  {
-//    for(int j=i+1;j<10;j++)
-//    {
-//      if(buffer_arr[i]>buffer_arr[j])
-//    {
-//    temp=buffer_arr[i];
-//    buffer_arr[i]=buffer_arr[j];
-//    buffer_arr[j]=temp;
-//   }
-//  }
-// }
-// avgval=0;
-// for(int i=2;i<8;i++)
-// avgval+=buffer_arr[i];
-// float volt=(float)avgval*5.0/1024/6;
-// float ph_act = -5.70 * volt + calibration_value;
-// Serial.print("pH Val:");
-// Serial.println(ph_act);
-// delay(1000);
-//}
+void phSensor(){
+  nilai_analog_PH = analogRead(ph_Pin);
+  TeganganPh = 3.3 / 1024.0 * nilai_analog_PH;
+  PH_step = (PHasam - PHnetral) / 3;
+  Po = 7.00 + ((PHnetral - TeganganPh) / PH_step);     //Po = 7.00 + ((teganganPh7 - TeganganPh) / PhStep);
+  Serial.print("Nilai PH cairan: ");
+  Serial.println(Po, 2);
+  delay(3000);
+}
 
 void hasil(){
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("tds: ");
-    lcd.setCursor(6,0);
+    lcd.setCursor(4,0);
     lcd.print(tdsValue);
-    lcd.setCursor(10,0);
+    lcd.setCursor(8,0);
     lcd.print("ppm");
+
+    lcd.setCursor(12,0);
+    lcd.print("pH: ");
+    lcd.setCursor(16,0);
+    lcd.print(Po,1);
     
     lcd.setCursor(0, 1);
     lcd.print("bak utama: ");
@@ -249,7 +241,10 @@ void hasil(){
 void pengiriman(){
   kirim = "";
   kirim+=tdsValue;
-//  kirim=kirim+tdsValue+";"+angkasiklus;
+  kirim+=";";
+  kirim+=Po;
+  kirim+=";";
+  kirim+=angkasiklus;
   Serial3.println(kirim);
   delay(500);
   
