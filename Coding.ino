@@ -73,50 +73,79 @@ void loop() {
     volumeB();
     phSensor();
     hasil();
-    if(percentageUtama<=30){
+    if(percentageUtama<=15){
       digitalWrite(relayUtama,HIGH);
-      while(percentageUtama<=80){ //isi sampe penuh
+      delay(500);
+      while(percentageUtama<=85){ //isi sampe penuh
         digitalWrite(relaySelang, LOW);
         delay(5000);
         digitalWrite(relaySelang, HIGH);
-        delay(3000);
+        delay(2000);
+        ppmUtama();
         volumeUtama();
+        volumeA();
+        volumeB();
+        phSensor();
         hasil();
       }
       angkasiklus++;
     }
-    digitalWrite(relayUtama, LOW);
-    delay(1000);
+
+    delay(500);
+    
     if(percentageA<=20 || percentageB<=20){
       digitalWrite(relayUtama, HIGH);
-      delay(1000);
+      delay(500);
       volumeA();
       volumeB();
-      hasil();
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Pupuk Habis!");
+      lcd.setCursor(0, 1);
+      lcd.print("Bak A: ");
+      lcd.setCursor(7, 1);
+      lcd.print(percentageA);
+      lcd.setCursor(10, 1);
+      lcd.print(" %");
+      
+      lcd.setCursor(0, 2);
+      lcd.print("Bak B: ");
+      lcd.setCursor(7, 2);
+      lcd.print(percentageB);
+      lcd.setCursor(10, 2);
+      lcd.print(" %");
     }
 
+    delay(500);
+    
     if(tdsValue<siklus[angkasiklus]){
       digitalWrite(relayUtama, HIGH);
       while(tdsValue<siklus[angkasiklus]){
         hasil();
         digitalWrite(relayA,LOW);
-        delay(2000);
-        digitalWrite(relayA,HIGH);
-        delay(1000);
         digitalWrite(relayB,LOW);
         delay(2000);
+        digitalWrite(relayA,HIGH);
         digitalWrite(relayB,HIGH);
-        delay(1000);
+        delay(2500);
         ppmUtama();
-        delay(500);
+        volumeUtama();
+        volumeA();
+        volumeB();
+        phSensor();
+        hasil();
       }
       digitalWrite(relayUtama, LOW);
       delay(2000);
     }
-  }else{
+    digitalWrite(relayUtama, LOW);
+    delay(1000);
+  }
+  else{
+    digitalWrite(relayUtama, HIGH);
     lcd.clear();
     lcd.setCursor(0,0);
-    lcd.print("siap panen");
+    lcd.print("Siap Panen!");
   }
   pengiriman();
 }
@@ -213,36 +242,36 @@ void phSensor(){
 void hasil(){
     lcd.clear();
     lcd.setCursor(0,0);
-    lcd.print("tds: ");
-    lcd.setCursor(4,0);
+    lcd.print("TDS: ");
+    lcd.setCursor(5,0);
     lcd.print(tdsValue);
-    lcd.setCursor(8,0);
+    lcd.setCursor(9,0);
     lcd.print("ppm");
 
-    lcd.setCursor(12,0);
+    lcd.setCursor(13,0);
     lcd.print("pH: ");
-    lcd.setCursor(16,0);
+    lcd.setCursor(17,0);
     lcd.print(Po,1);
     
     lcd.setCursor(0, 1);
-    lcd.print("bak utama: ");
+    lcd.print("Bak Utama: ");
     lcd.setCursor(11, 1);
     lcd.print(percentageUtama);
     lcd.setCursor(14, 1);
     lcd.print(" %");
     
     lcd.setCursor(0, 2);
-    lcd.print("bak A: ");
-    lcd.setCursor(9, 2);
+    lcd.print("Bak A: ");
+    lcd.setCursor(7, 2);
     lcd.print(percentageA);
-    lcd.setCursor(12, 2);
+    lcd.setCursor(10, 2);
     lcd.print(" %");
     
     lcd.setCursor(0, 3);
-    lcd.print("bak B: ");
-    lcd.setCursor(9, 3);
+    lcd.print("Bak B: ");
+    lcd.setCursor(7, 3);
     lcd.print(percentageB);
-    lcd.setCursor(12, 3);
+    lcd.setCursor(10, 3);
     lcd.print(" %");
   
 }
