@@ -91,6 +91,10 @@ void loop() {
       angkasiklus++;
     }
 
+    if(angkasiklus<0){
+      angkasiklus=0;
+    }
+
     delay(500);
     
     if(percentageA<=20 || percentageB<=20){
