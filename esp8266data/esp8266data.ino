@@ -14,6 +14,9 @@ int sendppm = 0;
 float sendph=0;
 int siklus=-1;
 String myStatus = "";
+int sendutama=0;
+int sendA=0;
+int sendB=0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -49,7 +52,9 @@ void loop() {
     sendppm=splitString(msg,';',0).toInt();
     sendph=splitString(msg,';',1).toFloat();
     siklus=splitString(msg,';',2).toInt();
-
+    sendutama=splitString(msg,';',3).toInt();
+    sendA=splitString(msg,';',4).toInt();
+    sendB=splitString(msg,';',5).toInt();
     
   }
 
@@ -57,6 +62,9 @@ void loop() {
 
   ThingSpeak.setField(1, sendppm);
   ThingSpeak.setField(2, sendph);
+  ThingSpeak.setField(3,sendutama);
+  ThingSpeak.setField(4,sendA);
+  ThingSpeak.setField(5,sendB);
 
   if(siklus==0){
     myStatus=String("Siklus pertama");
