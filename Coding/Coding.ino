@@ -1,3 +1,5 @@
+#include "DHT.h"
+
 #include <EEPROM.h>
 #include "GravityTDS.h"
 #include <LiquidCrystal_I2C.h>
@@ -10,13 +12,20 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 #define echoPinB 7 // echo ultrasonik bak pupuk B
 #define trigPinB 6 // trigger ultrasonik bak pupuk B
 #define TdsSensorPin A1
+#define DHTPIN 18
+#define DHTTYPE DHT11
+#define flowPin 19
 GravityTDS gravityTds;
+
+DHT dht(DHTPIN, DHTTYPE);
 
 const int ph_Pin  = A0;
 float Po = 0;
 float PH_step;
 int nilai_analog_PH;
 double TeganganPh;
+int suhu;
+int kelembaban;
 //untuk kalibrasi
 float PHasam = 3.1;
 float PHnetral = 2.7;
@@ -26,11 +35,25 @@ String kirim="";
 int siklus[]={400,600,800,1000};
 int angkasiklus=-1;
 
+volatile int flow_frequency; // Measures flow sensor pulses
+int l_minute;
+unsigned long currentTime;
+unsigned long cloopTime;
+
+
+#include <LiquidCrystal.h>
+
+
 // defines variables
 long durationUtama, durationA, durationB; // variable for the duration of sound wave travel
 int distanceUtama, distanceA, distanceB, percentageA, percentageB,percentageUtama; // variable for the distance measurement
 
 const int relayUtama=8, relayA=10, relayB=11, relaySelang=9;
+
+void flow () // Interrupt function
+{
+   flow_frequency++;
+}
 
 void setup() {
   Serial.begin(9600);
@@ -52,6 +75,12 @@ void setup() {
   digitalWrite(relayB, HIGH);
   digitalWrite(relaySelang, HIGH);
 
+  pinMode(flowPin, INPUT);
+  digitalWrite(flowPin, HIGH);
+  attachInterrupt(digitalPinToInterrupt(flowPin), flow, RISING); // Setup Interrupt
+  currentTime = millis();
+  cloopTime = currentTime;
+  
   lcd.init();
   lcd.backlight();
   
@@ -63,7 +92,18 @@ void setup() {
   gravityTds.setAref(5.0);  //reference voltage on ADC, default 5.0V on Arduino UNO
   gravityTds.setAdcRange(1024);  //1024 for 10bit ADC;4096 for 12bit ADC
   gravityTds.begin();  //initialization
-  
+
+  dht.begin();
+
+    ppmUtama();
+    volumeUtama();
+    volumeA();
+    volumeB();
+    phSensor();
+    dhtsensor();
+    flowsensor();
+    hasil();
+    pengiriman();
 }
 void loop() {
   if (angkasiklus<=3){
@@ -72,6 +112,8 @@ void loop() {
     volumeA();
     volumeB();
     phSensor();
+    dhtsensor();
+    flowsensor();
     hasil();
     if(percentageUtama<=15){
       digitalWrite(relayUtama,HIGH);
@@ -86,6 +128,8 @@ void loop() {
         volumeA();
         volumeB();
         phSensor();
+        dhtsensor();
+        flowsensor();
         hasil();
       }
       angkasiklus++;
@@ -128,7 +172,7 @@ void loop() {
         hasil();
         digitalWrite(relayA,LOW);
         digitalWrite(relayB,LOW);
-        delay(2000);
+        delay(10000);
         digitalWrite(relayA,HIGH);
         digitalWrite(relayB,HIGH);
         delay(2500);
@@ -137,6 +181,8 @@ void loop() {
         volumeA();
         volumeB();
         phSensor();
+        dhtsensor();
+        flowsensor();
         hasil();
       }
       digitalWrite(relayUtama, LOW);
@@ -152,6 +198,11 @@ void loop() {
     lcd.print("Siap Panen!");
   }
   pengiriman();
+}
+
+void dhtsensor(){
+  suhu=dht.readTemperature();
+  kelembaban=dht.readTemperature();
 }
 
 void ppmUtama(){
@@ -238,9 +289,28 @@ void phSensor(){
   TeganganPh = 3.3 / 1024.0 * nilai_analog_PH;
   PH_step = (PHasam - PHnetral) / 3;
   Po = 7.00 + ((PHnetral - TeganganPh) / PH_step);     //Po = 7.00 + ((teganganPh7 - TeganganPh) / PhStep);
+  if(Po>8){
+    Po=8;
+  }else if(Po<6){
+    Po=6;
+  }
+  
   Serial.print("Nilai PH cairan: ");
   Serial.println(Po, 2);
   delay(3000);
+}
+
+void flowsensor(){
+  currentTime=millis();
+  if(currentTime>=(cloopTime+1000)){
+    cloopTime=currentTime;
+    if(flow_frequency!=0){
+      l_minute=(flow_frequency/7.5);
+      flow_frequency = 0; 
+    }else{
+      l_minute=0;
+    }
+  } 
 }
 
 void hasil(){
@@ -256,27 +326,48 @@ void hasil(){
     lcd.print("pH: ");
     lcd.setCursor(17,0);
     lcd.print(Po,1);
-    
+
     lcd.setCursor(0, 1);
-    lcd.print("Bak Utama: ");
-    lcd.setCursor(11, 1);
+    lcd.print("Utama: ");
+    lcd.setCursor(7, 1);
     lcd.print(percentageUtama);
-    lcd.setCursor(14, 1);
-    lcd.print(" %");
+    lcd.setCursor(10, 1);
+    lcd.print("%");
+
+    lcd.setCursor(12, 1);
+    lcd.print("F: ");
+    lcd.setCursor(15, 1);
+    lcd.print(l_minute);
+    lcd.setCursor(17, 1);
+    lcd.print("L/M");
     
     lcd.setCursor(0, 2);
     lcd.print("Bak A: ");
     lcd.setCursor(7, 2);
     lcd.print(percentageA);
     lcd.setCursor(10, 2);
-    lcd.print(" %");
+    lcd.print("%");
     
     lcd.setCursor(0, 3);
     lcd.print("Bak B: ");
     lcd.setCursor(7, 3);
     lcd.print(percentageB);
     lcd.setCursor(10, 3);
-    lcd.print(" %");
+    lcd.print("%");
+
+    lcd.setCursor(12,2);
+    lcd.print("T: ");
+    lcd.setCursor(15,2);
+    lcd.print(suhu);
+    lcd.setCursor(18,2);
+    lcd.print("C");
+
+    lcd.setCursor(12,3);
+    lcd.print("H: ");
+    lcd.setCursor(15,3);
+    lcd.print(kelembaban);
+    lcd.setCursor(18,3);
+    lcd.print("%");
   
 }
 
@@ -293,6 +384,12 @@ void pengiriman(){
   kirim+=percentageA;
   kirim+=";";
   kirim+=percentageB;
+  kirim+=";";
+  kirim+=suhu;
+  kirim+=";";
+  kirim+=kelembaban;
+  kirim+=";";
+  kirim+=l_minute;
   
   Serial3.println(kirim);
   delay(500);

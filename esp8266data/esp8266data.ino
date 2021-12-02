@@ -1,8 +1,8 @@
 #include <ESP8266WiFi.h>
 #include "ThingSpeak.h" 
 
-char ssid[] = "EFRANANDI-DI15";   
-char pass[] = "aiueo123456";   
+char ssid[] = "ryujin";   
+char pass[] = "113333555555";   
 int keyIndex = 0;            
 WiFiClient  client;
 
@@ -31,13 +31,13 @@ void loop() {
   // put your main code here, to run repeatedly:
     // Connect or reconnect to WiFi
   if(WiFi.status() != WL_CONNECTED){
-    Serial.print("Attempting to connect");
+//    Serial.print("Attempting to connect");
     while(WiFi.status() != WL_CONNECTED){
       WiFi.begin(ssid, pass);  
-      Serial.print(".");
+//      Serial.print(".");
       delay(5000);     
     } 
-    Serial.println("\nConnected.");
+//    Serial.println("\nConnected.");
   }
 
 
@@ -55,7 +55,9 @@ void loop() {
     sendutama=splitString(msg,';',3).toInt();
     sendA=splitString(msg,';',4).toInt();
     sendB=splitString(msg,';',5).toInt();
-    
+    sendsuhu=splitString(msg,';',6).toInt();
+    sendlembab=splitString(msg,';',7).toInt();
+    sendflow=splitString(msg,';',8).toInt();
   }
 
   // set the fields with the values
@@ -65,6 +67,9 @@ void loop() {
   ThingSpeak.setField(3,sendutama);
   ThingSpeak.setField(4,sendA);
   ThingSpeak.setField(5,sendB);
+  ThingSpeak.setField(6,sendsuhu);
+  ThingSpeak.setField(7,sendlembab);
+  ThingSpeak.setField(8,sendflow);
 
   if(siklus==0){
     myStatus=String("Siklus pertama");
@@ -86,14 +91,14 @@ void loop() {
   
   // write to the ThingSpeak channel
   int x = ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);
-  if(x == 200){
-    Serial.println("Channel update successful.");
-  }
-  else{
-    Serial.println("Problem updating channel. HTTP error code " + String(x));
-  }
+//  if(x == 200){
+//    Serial.println("Channel update successful.");
+//  }
+//  else{
+//    Serial.println("Problem updating channel. HTTP error code " + String(x));
+//  }
   
-  delay(20000); // Wait 20 seconds to update the channel again
+  delay(60000); // Wait 60 seconds to update the channel again
 
 }
 
