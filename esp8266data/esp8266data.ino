@@ -1,8 +1,8 @@
 #include <ESP8266WiFi.h>
 #include "ThingSpeak.h" 
 
-char ssid[] = "ryujin";   
-char pass[] = "113333555555";   
+char ssid[] = "CBT SMAN 4";   
+//char pass[] = "113333555555";   
 int keyIndex = 0;            
 WiFiClient  client;
 
@@ -17,6 +17,13 @@ String myStatus = "";
 int sendutama=0;
 int sendA=0;
 int sendB=0;
+int sendsuhu=0;
+int sendlembab=0;
+int sendflow=0;
+
+unsigned long seconds = 1000L;
+unsigned long minutes = seconds*60;
+unsigned long thirty=minutes*30;
 
 void setup() {
   // put your setup code here, to run once:
@@ -33,7 +40,8 @@ void loop() {
   if(WiFi.status() != WL_CONNECTED){
 //    Serial.print("Attempting to connect");
     while(WiFi.status() != WL_CONNECTED){
-      WiFi.begin(ssid, pass);  
+//      WiFi.begin(ssid, pass);  
+      WiFi.begin(ssid); 
 //      Serial.print(".");
       delay(5000);     
     } 
@@ -97,8 +105,8 @@ void loop() {
 //  else{
 //    Serial.println("Problem updating channel. HTTP error code " + String(x));
 //  }
-  
-  delay(60000); // Wait 60 seconds to update the channel again
+
+  delay(thirty); // Wait 30 minutes to update the channel again
 
 }
 

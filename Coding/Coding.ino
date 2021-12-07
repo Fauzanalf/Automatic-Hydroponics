@@ -38,7 +38,8 @@ int angkasiklus=-1;
 volatile int flow_frequency; // Measures flow sensor pulses
 int l_minute;
 unsigned long currentTime;
-unsigned long cloopTime;
+unsigned long oldTime;
+float calibrationFactor = 7.5;
 
 
 #include <LiquidCrystal.h>
@@ -77,9 +78,9 @@ void setup() {
 
   pinMode(flowPin, INPUT);
   digitalWrite(flowPin, HIGH);
-  attachInterrupt(digitalPinToInterrupt(flowPin), flow, RISING); // Setup Interrupt
+  attachInterrupt(digitalPinToInterrupt(flowPin), flow, FALLING); // Setup Interrupt
   currentTime = millis();
-  cloopTime = currentTime;
+  oldTime=currentTime;
   
   lcd.init();
   lcd.backlight();
@@ -103,7 +104,7 @@ void setup() {
     dhtsensor();
     flowsensor();
     hasil();
-    pengiriman();
+//    pengiriman();
 }
 void loop() {
   if (angkasiklus<=3){
@@ -115,10 +116,10 @@ void loop() {
     dhtsensor();
     flowsensor();
     hasil();
-    if(percentageUtama<=15){
+    if(percentageUtama<=20){
       digitalWrite(relayUtama,HIGH);
       delay(500);
-      while(percentageUtama<=85){ //isi sampe penuh
+      while(percentageUtama<=80){ //isi sampe penuh
         digitalWrite(relaySelang, LOW);
         delay(5000);
         digitalWrite(relaySelang, HIGH);
@@ -141,27 +142,29 @@ void loop() {
 
     delay(500);
     
-    if(percentageA<=20 || percentageB<=20){
+    while(percentageA<=15 || percentageB<=15){
       digitalWrite(relayUtama, HIGH);
+      digitalWrite(relayA,HIGH);
+      digitalWrite(relayB,HIGH);
       delay(500);
       volumeA();
       volumeB();
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Pupuk Habis!");
-      lcd.setCursor(0, 1);
-      lcd.print("Bak A: ");
-      lcd.setCursor(7, 1);
-      lcd.print(percentageA);
-      lcd.setCursor(10, 1);
-      lcd.print(" %");
-      
       lcd.setCursor(0, 2);
-      lcd.print("Bak B: ");
+      lcd.print("Bak A: ");
       lcd.setCursor(7, 2);
-      lcd.print(percentageB);
+      lcd.print(percentageA);
       lcd.setCursor(10, 2);
-      lcd.print(" %");
+      lcd.print("%");
+    
+      lcd.setCursor(0, 3);
+      lcd.print("Bak B: ");
+      lcd.setCursor(7, 3);
+      lcd.print(percentageB);
+      lcd.setCursor(10, 3);
+      lcd.print("%");
     }
 
     delay(500);
@@ -202,12 +205,14 @@ void loop() {
 
 void dhtsensor(){
   suhu=dht.readTemperature();
-  kelembaban=dht.readTemperature();
+  kelembaban=dht.readHumidity();
 }
 
 void ppmUtama(){
+  int tdsTemp=0;
   gravityTds.update();  //sample and calculate
-  tdsValue = gravityTds.getTdsValue();  // then get the value
+  tdsTemp = gravityTds.getTdsValue(); 
+  tdsValue=4*tdsTemp;// then get the value
   Serial.print(tdsValue);
   Serial.println(" ppm");
 
@@ -301,16 +306,11 @@ void phSensor(){
 }
 
 void flowsensor(){
-  currentTime=millis();
-  if(currentTime>=(cloopTime+1000)){
-    cloopTime=currentTime;
-    if(flow_frequency!=0){
-      l_minute=(flow_frequency/7.5);
-      flow_frequency = 0; 
-    }else{
-      l_minute=0;
-    }
-  } 
+  if((millis() - oldTime) > 1000) {
+    l_minute = 60*((1000.0 / (millis() - oldTime)) * flow_frequency) / calibrationFactor;
+    oldTime=millis();
+    flow_frequency=0;
+  }
 }
 
 void hasil(){
@@ -339,7 +339,7 @@ void hasil(){
     lcd.setCursor(15, 1);
     lcd.print(l_minute);
     lcd.setCursor(17, 1);
-    lcd.print("L/M");
+    lcd.print("L/H");
     
     lcd.setCursor(0, 2);
     lcd.print("Bak A: ");
