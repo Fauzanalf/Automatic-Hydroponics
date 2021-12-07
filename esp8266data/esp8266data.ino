@@ -53,7 +53,6 @@ void loop() {
     String msg = "";
     while(Serial.available()){
       msg += char(Serial.read());
-      delay(50);
     }
 //
 //    Serial.print(msg);
