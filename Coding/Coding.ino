@@ -372,6 +372,9 @@ void hasil(){
 }
 
 void pengiriman(){
+  while(Serial3.available())
+  Serial3.read();
+  
   kirim = "";
   kirim+=tdsValue;
   kirim+=";";
