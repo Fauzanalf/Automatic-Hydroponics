@@ -375,6 +375,8 @@ void pengiriman(){
   while(Serial3.available())
   Serial3.read();
   
+  delay(500); 
+   
   kirim = "";
   kirim+=tdsValue;
   kirim+=";";
